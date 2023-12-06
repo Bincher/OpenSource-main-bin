@@ -29,18 +29,18 @@ class Content {
 
   Content.fromJson(Map<String, dynamic> json)
       : menuLines = (json['menuLines'] as List<dynamic>)
-            .map((e) => e.toString())
-            .toList(),
+      .map((e) => e.toString())
+      .toList(),
         selectedDate = json['selectedDate'],
         selectedLocation = json['selectedLocation'],
         time = json['time'];
 
   Map<String, dynamic> toJson() => {
-        'menuLines': menuLines,
-        'selectedDate': selectedDate,
-        'selectedLocation': selectedLocation,
-        'time': time,
-      };
+    'menuLines': menuLines,
+    'selectedDate': selectedDate,
+    'selectedLocation': selectedLocation,
+    'time': time,
+  };
 }
 
 void main() async {
@@ -128,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
               formatButtonVisible: false,
               titleCentered: true,
               titleTextStyle:
-                  TextStyle(fontWeight: FontWeight.w700, fontSize: 20.0),
+              TextStyle(fontWeight: FontWeight.w700, fontSize: 20.0),
             ),
             calendarStyle: const CalendarStyle(
               selectedDecoration: BoxDecoration(
@@ -206,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
         items: [
           BottomNavigationBarItem(
             icon:
-                Image.asset('assets/calendar1.png', width: 50.0, height: 50.0),
+            Image.asset('assets/calendar1.png', width: 50.0, height: 50.0),
             label: '캘린더',
             backgroundColor: const Color.fromRGBO(172, 237, 79, 1.0),
           ),
@@ -401,15 +401,14 @@ class _AlarmListPageState extends State<AlarmListPage> {
     final List<String>? alarmListJson = _prefs.getStringList('alarmList');
 
     if (alarmListJson != null) {
-      print("_loadAlarmData:${alarmListJson}"); // 저장된 알람 목록을 불러와서 업데이트함
+      print("_loadAlarmData: Loaded alarms - $alarmListJson");
       setState(() {
         _alarmList.clear();
-        _alarmList
-            .addAll(alarmListJson.map((jsonString) => json.decode(jsonString)));
+        _alarmList.addAll(alarmListJson.map((jsonString) => json.decode(jsonString)));
         _foundAlarms = List.from(_alarmList);
       });
     } else {
-      print("_loadAlarmData:목록 없음");
+      print("_loadAlarmData: No alarms found");
     }
   }
 
@@ -420,8 +419,8 @@ class _AlarmListPageState extends State<AlarmListPage> {
       } else {
         _foundAlarms = _alarmList
             .where((menu) => menu["menu"]
-                .toLowerCase()
-                .contains(enteredKeyword.toLowerCase()))
+            .toLowerCase()
+            .contains(enteredKeyword.toLowerCase()))
             .toList();
       }
     });
@@ -430,7 +429,18 @@ class _AlarmListPageState extends State<AlarmListPage> {
   void _addAlarm() {
     final String newAlarm = _alarmTextController.text;
     if (newAlarm.isNotEmpty) {
-      final int newId = _alarmList.length + 1;
+      // 현재까지 등록된 선호 메뉴 중 가장 큰 ID 찾기
+      int maxId = 0;
+      for (var alarm in _alarmList) {
+        if (alarm['id'] > maxId) {
+          maxId = alarm['id'];
+        }
+      }
+
+      // 새로운 ID 할당
+      final int newId = maxId + 1;
+
+      // 새로운 선호 메뉴 추가
       final Map<String, dynamic> newAlarmItem = {"id": newId, "menu": newAlarm};
       setState(() {
         _alarmList.add(newAlarmItem);
@@ -456,6 +466,7 @@ class _AlarmListPageState extends State<AlarmListPage> {
       _loadAlarmData();
     }
   }
+
 
   void _deleteAlarm(Map<String, dynamic> alarm) {
     setState(() {
@@ -533,38 +544,36 @@ class _AlarmListPageState extends State<AlarmListPage> {
             Expanded(
               child: _foundAlarms.isNotEmpty
                   ? ListView.builder(
-                      itemCount: _foundAlarms.length,
-                      itemBuilder: (context, index) {
-                        final alarm = _foundAlarms[index];
-                        return Card(
-                          key: ValueKey(alarm["id"]),
-                          color: Colors.white,
-                          elevation: 4,
-                          margin: const EdgeInsets.symmetric(vertical: 10),
-                          child: ListTile(
-                            title: Text(
-                              alarm['menu'],
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                setState(() {
-                                  _foundAlarms.remove(alarm);
-                                  _alarmList.remove(alarm);
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : const Text(
-                      '추가한 메뉴가 없어요 :(\n좋아하는 메뉴를 추가해주세요',
-                      style: TextStyle(
-                        fontSize: 10,
+                itemCount: _foundAlarms.length,
+                itemBuilder: (context, index) {
+                  final alarm = _foundAlarms[index];
+                  return Card(
+                    key: ValueKey(alarm["id"]),
+                    color: Colors.white,
+                    elevation: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: ListTile(
+                      title: Text(
+                        alarm['menu'],
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          // 삭제 버튼이 눌렸을 때 _deleteAlarm 함수 호출
+                          _deleteAlarm(alarm);
+                        },
                       ),
                     ),
+                  );
+                },
+              )
+                  : const Text(
+                '추가한 메뉴가 없어요 :(\n좋아하는 메뉴를 추가해주세요',
+                style: TextStyle(
+                  fontSize: 10,
+                ),
+              ),
             ),
           ],
         ),
@@ -581,17 +590,17 @@ tz.TZDateTime _timeZoneSetting({
   required int year,
 }) {
   tz.TZDateTime scheduledDate =
-      tz.TZDateTime(tz.local, year, month, day, hour, minute);
+  tz.TZDateTime(tz.local, year, month, day, hour, minute);
   return scheduledDate;
 }
 
 Future<void> _initLocalNotification() async {
   FlutterLocalNotificationsPlugin _localNotification =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
   AndroidInitializationSettings initSettingsAndroid =
-      const AndroidInitializationSettings('@mipmap/ic_launcher');
+  const AndroidInitializationSettings('@mipmap/ic_launcher');
   DarwinInitializationSettings initSettingsIOS =
-      const DarwinInitializationSettings(
+  const DarwinInitializationSettings(
     requestSoundPermission: false,
     requestBadgePermission: false,
     requestAlertPermission: false,
@@ -609,7 +618,7 @@ NotificationDetails _details = const NotificationDetails(
   android: AndroidNotificationDetails(
     'alarm 1',
     '1번 푸시',
-    styleInformation: DefaultStyleInformation(true, true),
+    styleInformation: BigTextStyleInformation(''),
   ),
   iOS: DarwinNotificationDetails(
     presentAlert: true,
@@ -620,7 +629,7 @@ NotificationDetails _details = const NotificationDetails(
 
 Future<void> scheduleWeeklyAlarm() async {
   FlutterLocalNotificationsPlugin _localNotification =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   // 현재 날짜 및 시간 가져오기
   tz.initializeTimeZones();
@@ -656,12 +665,12 @@ Future<void> scheduleWeeklyAlarm() async {
     // 해당 일자에 울릴 알람 예약
     await _localNotification.zonedSchedule(
       i, // 고유한 ID로 일자를 사용
-      '이번주 알림',
+      '오늘 당신이 좋아하는 메뉴가 있어요!',
       await getMenuNotificationMessage(scheduledDate), // 알림 내용 생성
       scheduledDate,
       _details,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       androidAllowWhileIdle: true,
     );
 
@@ -687,31 +696,33 @@ Future<String> getMenuNotificationMessage(tz.TZDateTime scheduledDate) async {
       Map<String, dynamic> alarm = json.decode(alarmJson);
 
       bool isMenuIncluded = menuList.any((content) => content.menuLines.any(
-          (line) => line.toLowerCase().contains(alarm['menu'].toLowerCase())));
+              (line) => line.toLowerCase().contains(alarm['menu'].toLowerCase())));
 
       if (isMenuIncluded) {
         print("좋아하는 메뉴가 포함된걸 확인했습니다.");
 
         // 선택한 식당에 따라 알림 메시지 구성
-        likedMenu = menuList
+        likedMenu += menuList
             .where((content) => content.menuLines.any((line) =>
-                line.toLowerCase().contains(alarm['menu'].toLowerCase())))
+            line.toLowerCase().contains(alarm['menu'].toLowerCase())))
             .map((content) =>
-                '날짜: ${content.selectedDate}\n식당: ${getContentLocationName(content.selectedLocation)}\n${getFullMenuLines(content.menuLines)}')
+        '날짜: ${content.selectedDate}\n식당: ${getContentLocationName(content.selectedLocation)}\n${getFullMenuLines(content.menuLines)}')
             .join('\n\n');
         print('식단 정보: $likedMenu');
       }
     }
-    return likedMenu;
+
+    return likedMenu; // 수정된 부분: 최종 결과 반환
   }
   print("메뉴가 포함안된걸 확인했습니다.");
 
   // 모든 식단 문서의 메뉴 정보 반환
   return menuList
       .map((content) =>
-          '날짜: ${content.selectedDate}\n식당: ${getContentLocationName(content.selectedLocation)}\n${getFullMenuLines(content.menuLines)}')
+  '날짜: ${content.selectedDate}\n식당: ${getContentLocationName(content.selectedLocation)}\n${getFullMenuLines(content.menuLines)}')
       .join('\n\n');
 }
+
 
 // 식당 이름에 따라 출력될 문자열 반환
 String getContentLocationName(String selectedLocation) {
@@ -746,7 +757,7 @@ Future<List<Content>> getMenuDataFromFirestore(
 
 Future<void> weeklyMondayPushAlarm() async {
   FlutterLocalNotificationsPlugin _localNotification =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
@@ -772,7 +783,7 @@ Future<void> weeklyMondayPushAlarm() async {
     nextMonday,
     _details,
     uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
+    UILocalNotificationDateInterpretation.absoluteTime,
     matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     androidAllowWhileIdle: true,
   );
